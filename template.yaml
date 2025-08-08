@@ -116,6 +116,35 @@ Resources:
             Path: /login
             Method: post
 
+  # Create User Function
+  CreateUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: auth/
+      Handler: createUser.createUserHandler
+      Runtime: nodejs22.x
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          USER_POOL_ID: !Ref UserPool
+          CLIENT_ID: !Ref UserPoolClient
+      Policies:
+        - Statement:
+          - Effect: Allow
+            Action:
+              - cognito-idp:AdminCreateUser
+              - cognito-idp:AdminSetUserPassword
+              - cognito-idp:AdminGetUser
+            Resource: !GetAtt UserPool.Arn
+      Events:
+        CreateUserApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref UserManagementApi
+            Path: /users
+            Method: post
+
   HelloWorldFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -160,6 +189,14 @@ Outputs:
   LoginFunction:
     Description: Login Lambda Function ARN
     Value: !GetAtt LoginFunction.Arn
+
+  CreateUserApi:
+    Description: API Gateway endpoint URL for Create User
+    Value: !Sub "https://${UserManagementApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/users"
+
+  CreateUserFunction:
+    Description: Create User Lambda Function ARN
+    Value: !GetAtt CreateUserFunction.Arn
 
   HelloWorldApi:
     Description: API Gateway endpoint URL for Prod stage for Hello World
