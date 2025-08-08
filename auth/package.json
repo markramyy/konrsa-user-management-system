@@ -1,0 +1,15 @@
+{
+  "name": "auth-functions",
+  "version": "1.0.0",
+  "description": "Authentication functions for user management system",
+  "main": "login.js",
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.0.0",
+    "esbuild": "^0.14.14"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}
