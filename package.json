@@ -1,0 +1,17 @@
+{
+  "name": "user-management-system-test",
+  "version": "1.0.0",
+  "description": "Test script for custom attribute functionality",
+  "main": "test-custom-attribute.js",
+  "scripts": {
+    "test": "node test-custom-attribute.js",
+    "test:custom-attr": "node test-custom-attribute.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.0.0"
+  },
+  "devDependencies": {},
+  "keywords": ["aws", "cognito", "sam", "custom-attributes"],
+  "author": "",
+  "license": "MIT"
+}
