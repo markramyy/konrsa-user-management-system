@@ -98,6 +98,16 @@ Resources:
         Variables:
           USER_POOL_ID: !Ref UserPool
           CLIENT_ID: !Ref UserPoolClient
+      Policies:
+        - Statement:
+          - Effect: Allow
+            Action:
+              - cognito-idp:AdminInitiateAuth
+              - cognito-idp:AdminGetUser
+              - cognito-idp:AdminCreateUser
+              - cognito-idp:AdminSetUserPassword
+              - cognito-idp:AdminUpdateUserAttributes
+            Resource: !GetAtt UserPool.Arn
       Events:
         LoginApi:
           Type: Api
