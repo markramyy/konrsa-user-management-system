@@ -1,127 +1,420 @@
-# user-management-system
+# User Management System
 
-This project contains source code and supporting files for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders.
+A serverless user management system built with AWS services: Cognito, Lambda, API Gateway, and SAM. This system provides secure user authentication, role-based access control, and comprehensive user management capabilities.
 
-- hello-world - Code for the application's Lambda function written in TypeScript.
-- events - Invocation events that you can use to invoke the function.
-- hello-world/tests - Unit tests for the application code. 
-- template.yaml - A template that defines the application's AWS resources.
+## 🏗️ Architecture
 
-The application uses several AWS resources, including Lambda functions and an API Gateway API. These resources are defined in the `template.yaml` file in this project. You can update the template to add AWS resources through the same deployment process that updates your application code.
+The application uses the following AWS services:
+- **AWS Cognito**: User authentication and management with custom attributes
+- **AWS Lambda**: Serverless compute for API handlers
+- **API Gateway**: RESTful API endpoints with CORS support
+- **CloudFormation**: Infrastructure as Code via SAM templates
 
-If you prefer to use an integrated development environment (IDE) to build and test your application, you can use the AWS Toolkit.  
-The AWS Toolkit is an open source plug-in for popular IDEs that uses the SAM CLI to build and deploy serverless applications on AWS. The AWS Toolkit also adds a simplified step-through debugging experience for Lambda function code. See the following links to get started.
+## 📁 Project Structure
 
-* [CLion](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [GoLand](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [IntelliJ](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [WebStorm](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [Rider](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [PhpStorm](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [PyCharm](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [RubyMine](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [DataGrip](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [VS Code](https://docs.aws.amazon.com/toolkit-for-vscode/latest/userguide/welcome.html)
-* [Visual Studio](https://docs.aws.amazon.com/toolkit-for-visual-studio/latest/user-guide/welcome.html)
+```
+user-management-system/
+├── src/                          # Source code
+│   ├── auth/                     # Authentication endpoints
+│   │   └── login.ts             # User login handler
+│   ├── users/                   # User management endpoints
+│   │   ├── createUser.ts        # Create new user (Admin+)
+│   │   ├── getUserInfo.ts       # Get current user info (Admin+)
+│   │   └── listUsers.ts         # List all users (SuperAdmin only)
+│   ├── utils/                   # Reusable utilities
+│   │   ├── auth.ts             # JWT token handling & authorization
+│   │   ├── cognito.ts          # AWS Cognito operations
+│   │   ├── response.ts         # Standardized API responses
+│   │   └── validation.ts       # Input validation functions
+│   ├── __tests__/              # Unit tests
+│   ├── package.json            # Dependencies
+│   └── tsconfig.json           # TypeScript configuration
+├── events/                      # Lambda test events
+├── coverage/                   # Test coverage reports
+├── template.yaml               # SAM infrastructure template
+├── build-and-deploy.sh        # Deployment script
+├── jest.config.js             # Jest test configuration
+└── package.json               # Root dependencies
+```
 
-## Deploy the sample application
+## 🔗 API Endpoints
 
-The Serverless Application Model Command Line Interface (SAM CLI) is an extension of the AWS CLI that adds functionality for building and testing Lambda applications. It uses Docker to run your functions in an Amazon Linux environment that matches Lambda. It can also emulate your application's build environment and API.
+| Endpoint | Method | Description                          | Access Control     | Authentication |
+|----------|--------|--------------------------------------|--------------------|----------------|
+| `/login` | POST   | Login user and return JWT tokens     | Public             | None           |
+| `/users` | POST   | Create a new user                    | Admin + SuperAdmin | JWT Required   |
+| `/users` | GET    | List all users from Cognito          | SuperAdmin only    | JWT Required   |
+| `/me`    | GET    | Return info about the logged-in user | Admin only         | JWT Required   |
 
-To use the SAM CLI, you need the following tools.
+### API Request/Response Examples
 
-* SAM CLI - [Install the SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
-* Node.js - [Install Node.js 22](https://nodejs.org/en/), including the NPM package management tool.
-* Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community)
+#### Login (`POST /login`)
+```json
+// Request
+{
+  "email": "user@example.com",
+  "password": "SecurePass123!"
+}
 
-To build and deploy your application for the first time, run the following in your shell:
+// Response
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "accessToken": "eyJ...",
+    "idToken": "eyJ...",
+    "refreshToken": "eyJ...",
+    "user": {
+      "email": "user@example.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "role": "Admin"
+    }
+  }
+}
+```
 
+#### Create User (`POST /users`)
+```json
+// Request
+{
+  "email": "newuser@example.com",
+  "firstName": "Jane",
+  "lastName": "Smith",
+  "role": "Admin",
+  "temporaryPassword": "TempPass123!"
+}
+
+// Response
+{
+  "success": true,
+  "message": "User created successfully",
+  "data": {
+    "userId": "uuid-here",
+    "email": "newuser@example.com",
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "role": "Admin",
+    "status": "FORCE_CHANGE_PASSWORD"
+  }
+}
+```
+
+## 🛡️ Security Features
+
+- **JWT Authentication**: Secure token-based authentication
+- **Role-Based Access Control**: Three user roles (User, Admin, SuperAdmin)
+- **Password Policy**: Enforced strong passwords (8+ chars, mixed case, numbers)
+- **Email Verification**: Auto-verified email attributes
+- **CORS Support**: Proper cross-origin resource sharing
+- **Input Validation**: Comprehensive request validation
+- **Error Handling**: Secure error responses without sensitive data exposure
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- [AWS CLI](https://aws.amazon.com/cli/) configured with appropriate permissions
+- [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
+- [Node.js 22+](https://nodejs.org/)
+- [Docker](https://www.docker.com/) for local testing
+
+### Installation & Deployment
+
+1. **Clone the repository**
 ```bash
-sam build
+git clone <repository-url>
+cd user-management-system
+```
+
+2. **Install dependencies**
+```bash
+npm install
+cd src && npm install && cd ..
+```
+
+3. **Build and deploy with initial SuperAdmin setup**
+```bash
+# Quick deployment with automatic SuperAdmin creation
+chmod +x build-and-deploy.sh
+./build-and-deploy.sh
+```
+
+The deployment script will:
+- **First run**: Use `sam deploy --guided` for initial configuration
+- **Subsequent runs**: Use `sam deploy` with saved configuration
+- Display all API endpoints
+- **Prompt you to create an initial SuperAdmin user** (first run only)
+- **Skip SuperAdmin creation if users already exist**
+
+**First deployment** - when prompted, provide:
+- SuperAdmin email address
+- First and last name
+- Secure password (8+ chars, mixed case, numbers)
+
+**Subsequent deployments** - the script will:
+- Detect existing deployment configuration
+- Skip the guided setup process
+- Skip SuperAdmin user creation (users already exist)4. **Alternative: Manual deployment**
+```bash
+cd src && npm run build && cd ..
 sam deploy --guided
 ```
 
-The first command will build the source of your application. The second command will package and deploy your application to AWS, with a series of prompts:
+⚠️ **Important**: If you choose manual deployment, you'll need to create your first SuperAdmin user manually in the AWS Cognito console before you can use the API to manage other users.
 
-* **Stack Name**: The name of the stack to deploy to CloudFormation. This should be unique to your account and region, and a good starting point would be something matching your project name.
-* **AWS Region**: The AWS region you want to deploy your app to.
-* **Confirm changes before deploy**: If set to yes, any change sets will be shown to you before execution for manual review. If set to no, the AWS SAM CLI will automatically deploy application changes.
-* **Allow SAM CLI IAM role creation**: Many AWS SAM templates, including this example, create AWS IAM roles required for the AWS Lambda function(s) included to access AWS services. By default, these are scoped down to minimum required permissions. To deploy an AWS CloudFormation stack which creates or modifies IAM roles, the `CAPABILITY_IAM` value for `capabilities` must be provided. If permission isn't provided through this prompt, to deploy this example you must explicitly pass `--capabilities CAPABILITY_IAM` to the `sam deploy` command.
-* **Save arguments to samconfig.toml**: If set to yes, your choices will be saved to a configuration file inside the project, so that in the future you can just re-run `sam deploy` without parameters to deploy changes to your application.
+### Initial SuperAdmin Setup (Bootstrap Problem Solution)
 
-You can find your API Gateway Endpoint URL in the output values displayed after deployment.
+Since this is a role-based access control system, you need at least one SuperAdmin to create other users. The build script solves this "bootstrap problem" by automatically creating your first SuperAdmin during the **initial deployment**.
 
-## Use the SAM CLI to build and test locally
+**Why this is needed:**
+- The `/users` POST endpoint requires Admin+ permissions
+- Without any existing users, you can't login to get the required JWT token
+- The deployment script creates your first SuperAdmin directly in Cognito on first run
+- Once you have a SuperAdmin, you can login and create other users through the API
 
-Build your application with the `sam build` command.
+**Smart Deployment Behavior:**
+- **First Run**: Script uses `sam deploy --guided` and offers to create SuperAdmin
+- **Subsequent Runs**: Script uses `sam deploy` and skips SuperAdmin creation
+- **Existing Users Check**: Script automatically detects if SuperAdmin users already exist
+- **Configuration Tracking**: Uses `.deployment-config` file to track deployment status
+
+**Manual SuperAdmin Creation (if needed):**
+```bash
+# Get your User Pool ID from CloudFormation outputs
+USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name user-management-system --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" --output text)
+
+# Create SuperAdmin user
+aws cognito-idp admin-create-user \
+  --user-pool-id $USER_POOL_ID \
+  --username "admin@yourcompany.com" \
+  --message-action SUPPRESS \
+  --temporary-password "TempPass123!" \
+  --user-attributes \
+    Name=email,Value="admin@yourcompany.com" \
+    Name=given_name,Value="System" \
+    Name=family_name,Value="Admin" \
+    Name=custom:user_role,Value="SuperAdmin"
+
+# Set permanent password
+aws cognito-idp admin-set-user-password \
+  --user-pool-id $USER_POOL_ID \
+  --username "admin@yourcompany.com" \
+  --password "YourSecurePass123!" \
+  --permanent
+```
+
+## 🔧 Development
+
+### Local Development
+
+Build your application with the `sam build` command:
 
 ```bash
-user-management-system$ sam build
+sam build
 ```
 
-The SAM CLI installs dependencies defined in `hello-world/package.json`, compiles TypeScript with esbuild, creates a deployment package, and saves it in the `.aws-sam/build` folder.
-
-Test a single function by invoking it directly with a test event. An event is a JSON document that represents the input that the function receives from the event source. Test events are included in the `events` folder in this project.
-
-Run functions locally and invoke them with the `sam local invoke` command.
+Test locally with SAM CLI:
 
 ```bash
-user-management-system$ sam local invoke HelloWorldFunction --event events/event.json
+# Start API locally
+sam local start-api
+
+# Test specific function
+sam local invoke LoginFunction --event events/event.json
 ```
 
-The SAM CLI can also emulate your application's API. Use the `sam local start-api` to run the API locally on port 3000.
+### Environment Variables
+
+The following environment variables are automatically configured by SAM:
+- `USER_POOL_ID`: AWS Cognito User Pool ID
+- `CLIENT_ID`: AWS Cognito Client ID
+- `AWS_REGION`: AWS Region
+
+## 🧪 Testing
+
+Run the comprehensive test suite:
 
 ```bash
-user-management-system$ sam local start-api
-user-management-system$ curl http://localhost:3000/
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Generate coverage report
+npm run test:coverage
 ```
 
-The SAM CLI reads the application template to determine the API's routes and the functions that they invoke. The `Events` property on each function's definition includes the route and method for each path.
+Test files are located in `src/__tests__/` and cover:
+- Authentication flows
+- User management operations
+- Authorization checks
+- Input validation
+- Error handling
 
-```yaml
-      Events:
-        HelloWorld:
-          Type: Api
-          Properties:
-            Path: /hello
-            Method: get
-```
+### Test Coverage
 
-## Add a resource to your application
-The application template uses AWS Serverless Application Model (AWS SAM) to define application resources. AWS SAM is an extension of AWS CloudFormation with a simpler syntax for configuring common serverless application resources such as functions, triggers, and APIs. For resources not included in [the SAM specification](https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md), you can use standard [AWS CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html) resource types.
+The test suite provides comprehensive coverage of:
+- ✅ Login functionality
+- ✅ User creation with role validation
+- ✅ User information retrieval
+- ✅ User listing with authorization
+- ✅ JWT token validation
+- ✅ Input validation
+- ✅ Error scenarios
 
-## Fetch, tail, and filter Lambda function logs
+### Automated Testing Script
 
-To simplify troubleshooting, SAM CLI has a command called `sam logs`. `sam logs` lets you fetch logs generated by your deployed Lambda function from the command line. In addition to printing the logs on the terminal, this command has several nifty features to help you quickly find the bug.
-
-`NOTE`: This command works for all AWS Lambda functions; not just the ones you deploy using SAM.
+For comprehensive endpoint testing, use the provided test script:
 
 ```bash
-user-management-system$ sam logs -n HelloWorldFunction --stack-name user-management-system --tail
+# Test all endpoints with auto-created test users
+node test-all-endpoints.js
 ```
 
-You can find more information and examples about filtering Lambda function logs in the [SAM CLI Documentation](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-logging.html).
+This script will:
+- Create test users for all roles (SuperAdmin, Admin, User)
+- Test authentication for each user type
+- Verify access controls for all endpoints
+- Provide detailed test results
 
-## Unit tests
+## 📮 Manual Testing with Postman
 
-Tests are defined in the `hello-world/tests` folder in this project. Use NPM to install the [Jest test framework](https://jestjs.io/) and run unit tests.
+Since the system uses role-based access control, you need to follow a specific flow when testing manually:
+
+### 1. Get Your API Endpoints
+
+After deployment, your endpoints will be displayed. You can also get them anytime:
 
 ```bash
-user-management-system$ cd hello-world
-hello-world$ npm install
-hello-world$ npm run test
+# Get all endpoints
+aws cloudformation describe-stacks --stack-name user-management-system --query "Stacks[0].Outputs"
 ```
 
-## Cleanup
+### 2. Login with Your SuperAdmin
 
-To delete the sample application that you created, use the AWS CLI. Assuming you used your project name for the stack name, you can run the following:
+**POST** `https://your-api-gateway-url/login`
+```json
+{
+  "email": "your-superadmin@email.com",
+  "password": "YourSecurePassword123!"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "accessToken": "eyJ...",
+    "idToken": "eyJhbGciOiJSUzI1NiIsI...",
+    "refreshToken": "eyJ...",
+    "user": {
+      "email": "your-superadmin@email.com",
+      "firstName": "Your",
+      "lastName": "Name",
+      "role": "SuperAdmin"
+    }
+  }
+}
+```
+
+### 3. Save the JWT Token
+
+Copy the `idToken` from the login response. You'll need to add it to the `Authorization` header for subsequent requests:
+
+```
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsI...
+```
+
+### 4. Test Each Endpoint
+
+#### Create a New User (Admin+ Required)
+**POST** `https://your-api-gateway-url/users`
+```json
+{
+  "email": "newuser@example.com",
+  "firstName": "New",
+  "lastName": "User",
+  "role": "Admin",
+  "temporaryPassword": "TempPass123!"
+}
+```
+
+#### List All Users (SuperAdmin Only)
+**GET** `https://your-api-gateway-url/users`
+- Headers: `Authorization: Bearer your-jwt-token`
+
+#### Get Current User Info (Admin+ Only)
+**GET** `https://your-api-gateway-url/me`
+- Headers: `Authorization: Bearer your-jwt-token`
+
+### 5. Test Access Controls
+
+To verify role-based access control:
+
+1. **Login as different user roles** and test endpoint access
+2. **Try accessing endpoints without JWT tokens** (should get 401)
+3. **Try accessing restricted endpoints with lower-privilege tokens** (should get 403)
+
+### Postman Collection Tips
+
+Create environment variables in Postman:
+- `baseUrl`: Your API Gateway URL
+- `jwtToken`: Current user's JWT token (update after each login)
+
+Example request headers:
+```
+Content-Type: application/json
+Authorization: Bearer {{jwtToken}}
+```
+
+## 📊 Monitoring & Logs
+
+View Lambda function logs:
+
+```bash
+# Tail logs for specific function
+sam logs -n LoginFunction --stack-name user-management-system --tail
+
+# View logs for all functions
+sam logs --stack-name user-management-system --tail
+```
+
+## 🎯 Key Features
+
+### Robust Architecture
+- **Modular Design**: Clear separation of concerns with utilities
+- **Type Safety**: Full TypeScript implementation
+- **Error Handling**: Comprehensive error management with user-friendly messages
+- **Code Reuse**: Shared utilities eliminate duplication
+
+### User Roles & Permissions
+- **User**: Basic user (default role)
+- **Admin**: Can access user info and create other users
+- **SuperAdmin**: Full access including user listing
+
+### AWS Cognito Integration
+- Custom user attribute for role management
+- Secure password policies
+- Email-based usernames
+- Automatic email verification
+
+## 📚 Additional Resources
+
+- [AWS SAM Developer Guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html)
+- [AWS Cognito Documentation](https://docs.aws.amazon.com/cognito/)
+- [API Gateway Documentation](https://docs.aws.amazon.com/apigateway/)
+- [AWS Lambda Documentation](https://docs.aws.amazon.com/lambda/)
+
+## 🗑️ Cleanup
+
+To delete the deployed application:
 
 ```bash
 sam delete --stack-name user-management-system
 ```
 
-## Resources
-
-See the [AWS SAM developer guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) for an introduction to SAM specification, the SAM CLI, and serverless application concepts.
-
-Next, you can use AWS Serverless Application Repository to deploy ready to use Apps that go beyond hello world samples and learn how authors developed their applications: [AWS Serverless Application Repository main page](https://aws.amazon.com/serverless/serverlessrepo/)
+This will remove all AWS resources created by the template.
