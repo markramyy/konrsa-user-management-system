@@ -2,13 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createUserHandler = void 0;
 const client_cognito_identity_provider_1 = require("@aws-sdk/client-cognito-identity-provider");
-// Environment variables
 const USER_POOL_ID = process.env.USER_POOL_ID;
 const CLIENT_ID = process.env.CLIENT_ID;
 const AWS_REGION = process.env.AWS_REGION || 'us-east-1';
-// Initialize Cognito client
 const cognito = new client_cognito_identity_provider_1.CognitoIdentityProviderClient({ region: AWS_REGION });
-// Helper function to create response
 const createResponse = (statusCode, body) => ({
     statusCode,
     headers: {
@@ -19,14 +16,12 @@ const createResponse = (statusCode, body) => ({
     },
     body: JSON.stringify(body)
 });
-// Extract user info from JWT token
 const extractUserFromToken = (authHeader) => {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         throw new Error('No valid authorization token provided');
     }
     const token = authHeader.replace('Bearer ', '');
     try {
-        // Decode JWT payload (no verification for simplicity in this demo)
         const payload = token.split('.')[1];
         const decoded = JSON.parse(Buffer.from(payload, 'base64').toString());
         return {
@@ -40,12 +35,10 @@ const extractUserFromToken = (authHeader) => {
         throw new Error('Invalid token format');
     }
 };
-// Authorization check
 const isAuthorized = (userRole) => {
     const allowedRoles = ['Admin', 'SuperAdmin'];
     return allowedRoles.includes(userRole);
 };
-// Validate request body
 const validateCreateUserRequest = (body) => {
     const required = ['email', 'firstName', 'lastName', 'role', 'temporaryPassword'];
     for (const field of required) {
@@ -56,7 +49,6 @@ const validateCreateUserRequest = (body) => {
             };
         }
     }
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(body.email)) {
         return {
@@ -64,7 +56,6 @@ const validateCreateUserRequest = (body) => {
             error: 'Invalid email format'
         };
     }
-    // Role validation
     const validRoles = ['Admin', 'SuperAdmin', 'User'];
     if (!validRoles.includes(body.role)) {
         return {
@@ -72,7 +63,6 @@ const validateCreateUserRequest = (body) => {
             error: 'Role must be one of: Admin, SuperAdmin, User'
         };
     }
-    // Password validation
     if (body.temporaryPassword.length < 8) {
         return {
             isValid: false,
@@ -81,7 +71,6 @@ const validateCreateUserRequest = (body) => {
     }
     return { isValid: true };
 };
-// Main create user handler
 const createUserHandler = async (event) => {
     console.log('Create user request received:', {
         path: event.path,
@@ -89,14 +78,12 @@ const createUserHandler = async (event) => {
         headers: { ...event.headers, Authorization: '[REDACTED]' }
     });
     try {
-        // Handle CORS preflight
         if (event.httpMethod === 'OPTIONS') {
             return createResponse(200, {
                 success: true,
                 message: 'CORS preflight successful'
             });
         }
-        // Validate HTTP method
         if (event.httpMethod !== 'POST') {
             return createResponse(405, {
                 success: false,
@@ -104,7 +91,6 @@ const createUserHandler = async (event) => {
                 error: 'Only POST method is supported'
             });
         }
-        // Extract and validate user from JWT token
         let currentUser;
         try {
             currentUser = extractUserFromToken(event.headers.Authorization || event.headers.authorization);
@@ -116,7 +102,6 @@ const createUserHandler = async (event) => {
                 error: error.message
             });
         }
-        // Check authorization
         if (!isAuthorized(currentUser.role)) {
             return createResponse(403, {
                 success: false,
@@ -124,7 +109,6 @@ const createUserHandler = async (event) => {
                 error: 'Only Admin and SuperAdmin users can create new users'
             });
         }
-        // Parse and validate request body
         if (!event.body) {
             return createResponse(400, {
                 success: false,
@@ -143,7 +127,6 @@ const createUserHandler = async (event) => {
                 error: 'Invalid JSON format'
             });
         }
-        // Validate request data
         const validation = validateCreateUserRequest(requestBody);
         if (!validation.isValid) {
             return createResponse(400, {
@@ -152,7 +135,6 @@ const createUserHandler = async (event) => {
                 error: validation.error
             });
         }
-        // Create user in Cognito
         const createUserCommand = new client_cognito_identity_provider_1.AdminCreateUserCommand({
             UserPoolId: USER_POOL_ID,
             Username: requestBody.email,
@@ -173,7 +155,6 @@ const createUserHandler = async (event) => {
                 error: 'Failed to create user in Cognito'
             });
         }
-        // Set permanent password
         const setPasswordCommand = new client_cognito_identity_provider_1.AdminSetUserPasswordCommand({
             UserPoolId: USER_POOL_ID,
             Username: requestBody.email,
@@ -181,7 +162,6 @@ const createUserHandler = async (event) => {
             Permanent: true
         });
         await cognito.send(setPasswordCommand);
-        // Prepare successful response
         const successResponse = {
             success: true,
             message: 'User created successfully',
@@ -204,7 +184,6 @@ const createUserHandler = async (event) => {
     }
     catch (error) {
         console.error('Create user error:', error);
-        // Handle specific Cognito errors
         if (error.name === 'UsernameExistsException') {
             return createResponse(409, {
                 success: false,
@@ -216,7 +195,7 @@ const createUserHandler = async (event) => {
             return createResponse(400, {
                 success: false,
                 message: 'User creation failed',
-                error: 'Password does not meet complexity requirements'
+                error: 'Password does not meet necessary requirements'
             });
         }
         if (error.name === 'InvalidParameterException') {
@@ -233,7 +212,6 @@ const createUserHandler = async (event) => {
                 error: 'Please try again later'
             });
         }
-        // Generic error response
         return createResponse(500, {
             success: false,
             message: 'Internal server error',
