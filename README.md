@@ -264,21 +264,6 @@ The test suite provides comprehensive coverage of:
 - ✅ Input validation
 - ✅ Error scenarios
 
-### Automated Testing Script
-
-For comprehensive endpoint testing, use the provided test script:
-
-```bash
-# Test all endpoints with auto-created test users
-node test-all-endpoints.js
-```
-
-This script will:
-- Create test users for all roles (SuperAdmin, Admin, User)
-- Test authentication for each user type
-- Verify access controls for all endpoints
-- Provide detailed test results
-
 ## 📮 Manual Testing with Postman
 
 Since the system uses role-based access control, you need to follow a specific flow when testing manually:
