@@ -6,7 +6,7 @@
 
 const https = require('https');
 
-// Get API endpoints from CloudFormation outputs
+// Get API endpoints and User Pool ID from CloudFormation outputs
 async function getApiEndpoints() {
     const { exec } = require('child_process');
 
@@ -22,14 +22,15 @@ async function getApiEndpoints() {
         });
     };
 
-    const [loginUrl, createUserUrl, listUsersUrl, getUserInfoUrl] = await Promise.all([
+    const [loginUrl, createUserUrl, listUsersUrl, getUserInfoUrl, userPoolId] = await Promise.all([
         getOutput('LoginApi'),
         getOutput('CreateUserApi'),
         getOutput('ListUsersApi'),
-        getOutput('GetUserInfoApi')
+        getOutput('GetUserInfoApi'),
+        getOutput('UserPoolId')
     ]);
 
-    return { loginUrl, createUserUrl, listUsersUrl, getUserInfoUrl };
+    return { loginUrl, createUserUrl, listUsersUrl, getUserInfoUrl, userPoolId };
 }
 
 // Make HTTP request
@@ -91,13 +92,12 @@ async function makeRequest(url, method = 'GET', data = null, token = null) {
 }
 
 // Create test users
-async function createTestUsers() {
+async function createTestUsers(userPoolId) {
     console.log('👥 Setting up test users...');
 
     const { CognitoIdentityProviderClient, AdminCreateUserCommand, AdminSetUserPasswordCommand } = require('@aws-sdk/client-cognito-identity-provider');
 
     const cognito = new CognitoIdentityProviderClient({ region: 'us-east-1' });
-    const USER_POOL_ID = 'us-east-1_CuP3LGrFh';
 
     const testUsers = [
         {
@@ -126,7 +126,7 @@ async function createTestUsers() {
     for (const user of testUsers) {
         try {
             await cognito.send(new AdminCreateUserCommand({
-                UserPoolId: USER_POOL_ID,
+                UserPoolId: userPoolId,
                 Username: user.email,
                 MessageAction: 'SUPPRESS',
                 TemporaryPassword: user.password,
@@ -139,7 +139,7 @@ async function createTestUsers() {
             }));
 
             await cognito.send(new AdminSetUserPasswordCommand({
-                UserPoolId: USER_POOL_ID,
+                UserPoolId: userPoolId,
                 Username: user.email,
                 Password: user.password,
                 Permanent: true
@@ -165,14 +165,15 @@ async function runAllTests() {
     try {
         // Get API endpoints
         console.log('📡 Getting API endpoints...');
-        const { loginUrl, createUserUrl, listUsersUrl, getUserInfoUrl } = await getApiEndpoints();
+        const { loginUrl, createUserUrl, listUsersUrl, getUserInfoUrl, userPoolId } = await getApiEndpoints();
         console.log(`✅ Login URL: ${loginUrl}`);
         console.log(`✅ Create User URL: ${createUserUrl}`);
         console.log(`✅ List Users URL: ${listUsersUrl}`);
-        console.log(`✅ Get User Info URL: ${getUserInfoUrl}\n`);
+        console.log(`✅ Get User Info URL: ${getUserInfoUrl}`);
+        console.log(`✅ User Pool ID: ${userPoolId}\n`);
 
         // Create test users
-        const testUsers = await createTestUsers();
+        const testUsers = await createTestUsers(userPoolId);
         console.log('');
 
         // Login all test users
@@ -343,4 +344,4 @@ if (require.main === module) {
     runAllTests().catch(console.error);
 }
 
-module.exports = { makeRequest, getApiEndpoints, createTestUsers };
+module.exports = { makeRequest, getApiEndpoints };
