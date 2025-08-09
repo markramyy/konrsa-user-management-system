@@ -24,11 +24,6 @@ interface UserInfoResponse {
 }
 
 export const getUserInfoHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    console.log('Get user info request received:', {
-        path: event.path,
-        method: event.httpMethod,
-        headers: { ...event.headers, Authorization: '[REDACTED]' }
-    });
 
     try {
         if (event.httpMethod === 'OPTIONS') {
@@ -54,8 +49,6 @@ export const getUserInfoHandler = async (event: APIGatewayProxyEvent): Promise<A
 
         const user = authValidation.user!;
 
-        console.log(`Admin ${user.role} requesting own user info`);
-
         // Return user information from the JWT token
         const successResponse: UserInfoResponse = {
             success: true,
@@ -70,11 +63,9 @@ export const getUserInfoHandler = async (event: APIGatewayProxyEvent): Promise<A
             }
         };
 
-        console.log(`Successfully retrieved user info for: ${user.email}`);
         return createResponse(200, successResponse);
 
     } catch (error: any) {
-        console.error('Get user info error:', error);
         return createInternalServerErrorResponse();
     }
 };

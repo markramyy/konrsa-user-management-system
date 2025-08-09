@@ -35,11 +35,6 @@ interface LoginResponse {
 }
 
 export const loginHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    console.log('Login request received:', {
-        path: event.path,
-        method: event.httpMethod,
-        headers: { ...event.headers, authorization: '[REDACTED]' }
-    });
 
     try {
         if (event.httpMethod === 'OPTIONS') {
@@ -92,12 +87,9 @@ export const loginHandler = async (event: APIGatewayProxyEvent): Promise<APIGate
             }
         };
 
-        console.log('Login successful for user:', userPayload.email);
         return createResponse(200, successResponse);
 
     } catch (error: any) {
-        console.error('Login error:', error);
-
         const cognitoError = handleCognitoError(error);
 
         // Handle specific error types

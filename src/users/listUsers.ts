@@ -30,11 +30,6 @@ interface ListUsersResponse {
 }
 
 export const listUsersHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    console.log('List users request received:', {
-        path: event.path,
-        method: event.httpMethod,
-        headers: { ...event.headers, Authorization: '[REDACTED]' }
-    });
 
     try {
         if (event.httpMethod === 'OPTIONS') {
@@ -60,8 +55,6 @@ export const listUsersHandler = async (event: APIGatewayProxyEvent): Promise<API
 
         const user = authValidation.user!;
 
-        console.log(`SuperAdmin ${user.role} requesting user list`);
-
         // List all users from Cognito
         const users = await listCognitoUsers(60); // Cognito max limit per request
 
@@ -74,12 +67,9 @@ export const listUsersHandler = async (event: APIGatewayProxyEvent): Promise<API
             }
         };
 
-        console.log(`Successfully retrieved ${users.length} users`);
         return createResponse(200, successResponse);
 
     } catch (error: any) {
-        console.error('List users error:', error);
-
         const cognitoError = handleCognitoError(error);
 
         if (cognitoError.name === 'TooManyRequestsException') {

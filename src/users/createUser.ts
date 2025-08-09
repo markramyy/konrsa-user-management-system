@@ -37,11 +37,6 @@ interface CreateUserResponse {
 }
 
 export const createUserHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    console.log('Create user request received:', {
-        path: event.path,
-        method: event.httpMethod,
-        headers: { ...event.headers, Authorization: '[REDACTED]' }
-    });
 
     try {
         if (event.httpMethod === 'OPTIONS') {
@@ -98,18 +93,9 @@ export const createUserHandler = async (event: APIGatewayProxyEvent): Promise<AP
             }
         };
 
-        console.log('User created successfully:', {
-            userId: createdUser.Username,
-            email: requestBody.email,
-            role: requestBody.role,
-            createdBy: authValidation.user?.email
-        });
-
         return createResponse(201, successResponse);
 
     } catch (error: any) {
-        console.error('Create user error:', error);
-
         const cognitoError = handleCognitoError(error);
 
         // Handle specific error types
