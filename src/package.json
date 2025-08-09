@@ -1,0 +1,20 @@
+{
+    "name": "user-management-functions",
+    "version": "1.0.0",
+    "description": "User management system with refactored structure",
+    "main": "index.js",
+    "dependencies": {
+        "@aws-sdk/client-cognito-identity-provider": "^3.0.0",
+        "esbuild": "^0.14.14"
+    },
+    "devDependencies": {
+        "@types/aws-lambda": "^8.10.0",
+        "@types/node": "^20.0.0",
+        "typescript": "^5.0.0"
+    },
+    "scripts": {
+        "build": "tsc",
+        "build:watch": "tsc --watch",
+        "lint": "tsc --noEmit"
+    }
+}
