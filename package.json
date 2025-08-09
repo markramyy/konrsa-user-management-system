@@ -4,14 +4,26 @@
   "description": "Test script for custom attribute functionality",
   "main": "test-custom-attribute.js",
   "scripts": {
-    "test": "node test-custom-attribute.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "test:custom-attr": "node test-custom-attribute.js"
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.0.0"
   },
-  "devDependencies": {},
-  "keywords": ["aws", "cognito", "sam", "custom-attributes"],
+  "devDependencies": {
+    "@jest/globals": "^30.0.5",
+    "@types/jest": "^30.0.0",
+    "jest": "^30.0.5",
+    "ts-jest": "^29.4.1"
+  },
+  "keywords": [
+    "aws",
+    "cognito",
+    "sam",
+    "custom-attributes"
+  ],
   "author": "",
   "license": "MIT"
 }
