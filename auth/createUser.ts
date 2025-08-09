@@ -255,7 +255,7 @@ export const createUserHandler = async (event: APIGatewayProxyEvent): Promise<AP
             return createResponse(400, {
                 success: false,
                 message: 'User creation failed',
-                error: 'Password does not meet complexity requirements'
+                error: 'Password does not meet necessary requirements'
             });
         }
 
