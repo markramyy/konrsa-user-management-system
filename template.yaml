@@ -145,6 +145,55 @@ Resources:
             Path: /users
             Method: post
 
+  # List Users Function (SuperAdmin only)
+  ListUsersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: auth/
+      Handler: listUsers.listUsersHandler
+      Runtime: nodejs22.x
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          USER_POOL_ID: !Ref UserPool
+          CLIENT_ID: !Ref UserPoolClient
+      Policies:
+        - Statement:
+          - Effect: Allow
+            Action:
+              - cognito-idp:ListUsers
+              - cognito-idp:AdminGetUser
+            Resource: !GetAtt UserPool.Arn
+      Events:
+        ListUsersApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref UserManagementApi
+            Path: /users
+            Method: get
+
+  # Get User Info Function (Admin only)
+  GetUserInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: auth/
+      Handler: getUserInfo.getUserInfoHandler
+      Runtime: nodejs22.x
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          USER_POOL_ID: !Ref UserPool
+          CLIENT_ID: !Ref UserPoolClient
+      Events:
+        GetUserInfoApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref UserManagementApi
+            Path: /me
+            Method: get
+
   HelloWorldFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -197,6 +246,22 @@ Outputs:
   CreateUserFunction:
     Description: Create User Lambda Function ARN
     Value: !GetAtt CreateUserFunction.Arn
+
+  ListUsersApi:
+    Description: API Gateway endpoint URL for List Users
+    Value: !Sub "https://${UserManagementApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/users"
+
+  ListUsersFunction:
+    Description: List Users Lambda Function ARN
+    Value: !GetAtt ListUsersFunction.Arn
+
+  GetUserInfoApi:
+    Description: API Gateway endpoint URL for Get User Info
+    Value: !Sub "https://${UserManagementApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/me"
+
+  GetUserInfoFunction:
+    Description: Get User Info Lambda Function ARN
+    Value: !GetAtt GetUserInfoFunction.Arn
 
   HelloWorldApi:
     Description: API Gateway endpoint URL for Prod stage for Hello World
