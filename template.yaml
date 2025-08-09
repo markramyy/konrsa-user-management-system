@@ -191,30 +191,6 @@ Resources:
             Path: /me
             Method: get
 
-  HelloWorldFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: hello-world/
-      Handler: app.lambdaHandler
-      Runtime: nodejs22.x
-      Architectures:
-      - x86_64
-      Events:
-        HelloWorld:
-          Type: Api
-          Properties:
-            RestApiId: !Ref UserManagementApi
-            Path: /hello
-            Method: get
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2020
-        Sourcemap: true
-        EntryPoints:
-        - app.ts
-
 Outputs:
   UserManagementApi:
     Description: API Gateway endpoint URL for user management
@@ -259,14 +235,3 @@ Outputs:
   GetUserInfoFunction:
     Description: Get User Info Lambda Function ARN
     Value: !GetAtt GetUserInfoFunction.Arn
-
-  HelloWorldApi:
-    Description: API Gateway endpoint URL for Prod stage for Hello World
-      function
-    Value: !Sub "https://${UserManagementApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/hello/"
-  HelloWorldFunction:
-    Description: Hello World Lambda Function ARN
-    Value: !GetAtt HelloWorldFunction.Arn
-  HelloWorldFunctionIamRole:
-    Description: Implicit IAM Role created for Hello World function
-    Value: !GetAtt HelloWorldFunctionRole.Arn
