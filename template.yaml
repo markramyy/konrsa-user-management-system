@@ -90,7 +90,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
-      Handler: auth/login.loginHandler
+      Handler: dist/auth/login.loginHandler
       Runtime: nodejs22.x
       Architectures:
         - x86_64
@@ -118,7 +118,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
-      Handler: users/createUser.createUserHandler
+      Handler: dist/users/createUser.createUserHandler
       Runtime: nodejs22.x
       Architectures:
         - x86_64
@@ -147,7 +147,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
-      Handler: users/listUsers.listUsersHandler
+      Handler: dist/users/listUsers.listUsersHandler
       Runtime: nodejs22.x
       Architectures:
         - x86_64
@@ -175,7 +175,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
-      Handler: users/getUserInfo.getUserInfoHandler
+      Handler: dist/users/getUserInfo.getUserInfoHandler
       Runtime: nodejs22.x
       Architectures:
         - x86_64
